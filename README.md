@@ -6,8 +6,8 @@ standard HID-compliant game controller. Every button, the D-pad, and both
 analog sticks register normally — no driver install, no extra software on
 the host.
 
-Runs on-device alongside stock firmware. The device keeps working as a
-retro handheld; this just adds a second identity as a wireless controller.
+Runs on-device on the RG35XX H with a dedicated **muOS** launcher/package
+path, plus the original stock-firmware installer flow.
 
 Tested end-to-end on the RG35XX H (Allwinner H700, ARM64) with stock
 firmware build `20251225` (Dec 2025). Probably works on other Anbernic
@@ -36,7 +36,38 @@ input evdev codes are the same.
 **On the host (your PC/phone):**
 - Anything that pairs with Bluetooth Classic HID gamepads. No software to install.
 
-## Install
+## Install on muOS (RG35XX H)
+
+Build a `.muxapp` package, then install it with muOS Archive Manager:
+
+```bash
+git clone https://github.com/slothitude/slothos-bt-gamepad.git
+cd slothos-bt-gamepad
+./muos/build-muxapp.sh
+```
+
+This creates:
+
+```text
+dist/SlothOS-BT-Gamepad.muxapp
+```
+
+Install it on the device:
+
+1. Copy `dist/SlothOS-BT-Gamepad.muxapp` to `/mnt/mmc/ARCHIVE` (or `/mnt/sdcard/ARCHIVE`).
+2. On muOS: **Applications → Archive Manager** and install the package.
+3. Launch **SlothOS BT Gamepad** from **Applications**.
+
+The app runs in foreground and logs to:
+
+```text
+<storage>/MUOS/application/SlothOS-BT-Gamepad/log.txt
+```
+
+If your input node is not `/dev/input/event1`, set `BT_GAMEPAD_INPUT_DEVICE`
+before launch in `mux_launch.sh`.
+
+## Install on stock firmware (legacy SSH flow)
 
 From a machine that can SSH to the device:
 
@@ -187,6 +218,8 @@ The stack lives in the device's BlueZ userspace — no kernel modifications.
 | `bt_gamepad.service` | systemd unit |
 | `bluetooth.service.d/exec.conf` | BlueZ `--compat` + plugin blocklist override |
 | `install.sh` | One-command installer (run from host) |
+| `muos/mux_launch.sh` | muOS app entrypoint (`.muxapp` launcher) |
+| `muos/build-muxapp.sh` | Build `dist/SlothOS-BT-Gamepad.muxapp` from this repo |
 | `app/bt_mode.py` | Optional BT Mode splash app (direct fb0 mmap + PIL) |
 | `app/splash.png` | 640×480 splash image shown on the device panel |
 | `app/icon.png` | 240×180 RGBA icon derived from `splash.png`, shown in the stock launcher grid |
